@@ -27,7 +27,9 @@ public class TtsManager: NSObject, AVSpeechSynthesizerDelegate {
         speechUtterance.voice = AVSpeechSynthesisVoice(language: language)
         speechUtterance.rate = rate
         speechUtterance.pitchMultiplier = pitch
-        synthesizer.stopSpeaking(at: .immediate)
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
         synthesizer.speak(speechUtterance)
     }
     
@@ -39,15 +41,18 @@ public class TtsManager: NSObject, AVSpeechSynthesizerDelegate {
     // MARK: AVSpeechSynthesizerDelegate
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
         print("start")
+        UnitySendMessage("FreeTtsManager", "OnCallBack", "start")
     }
     
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         print("cancel")
+        UnitySendMessage("FreeTtsManager", "OnCallBack", "cancel")
     }
     
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance)
     {
         print("finish")
+        UnitySendMessage("FreeTtsManager", "OnCallBack", "finish")
     }
     
     

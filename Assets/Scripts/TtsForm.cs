@@ -1,77 +1,94 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using FreeTts;
 
-namespace FreeTTS
+public class TtsForm : MonoBehaviour
 {
-	public class TtsForm : MonoBehaviour
+	[SerializeField] private InputField _inputField;
+	[SerializeField] private InputField _rateInputField;
+	[SerializeField] private InputField _pitchInputField;
+	[SerializeField] private InputField _languageInputField;
+	[SerializeField] private Button _speakButton;
+	[SerializeField] private Button _stopButton;
+	private FreeTtsManager _tts;
+	private List<string> _texts = new List<string>();
+
+	void Start ()
 	{
-		[SerializeField] private InputField _inputField;
-		[SerializeField] private InputField _rateInputField;
-		[SerializeField] private InputField _pitchInputField;
-		[SerializeField] private InputField _languageInputField;
-		[SerializeField] private Button _speakButton;
-		[SerializeField] private Button _stopButton;
+		_inputField.text = "我愛你 我恨你";
+		_rateInputField.text = "0.5";
+		_pitchInputField.text = "1.0";
+		_languageInputField.text = "zh-CN";
+	}
 
-		[DllImport("__Internal")]
-		private static extern void Speech (string text, string language, float rate, float pitch);
-		[DllImport("__Internal")]
-		private static extern void Stop ();
+	public void OnSpeakClick()
+	{
+		Debug.Log("OnSpeakClick");
 
-		// Use this for initialization
-		void Start ()
+		var inputTexts = _inputField.text;
+		_texts.Clear();
+		foreach (var text in inputTexts.Split(' '))
 		{
-			_inputField.text = "我愛你";
-			_rateInputField.text = "0.5";
-			_pitchInputField.text = "1.0";
-			_languageInputField.text = "zh-CN";
+			_texts.Add(text);
+		}
+		SpeakTextsIfExists();
+	}
+
+	public void OnStopClick()
+	{
+		Debug.Log("OnStopClick");
+		_texts.Clear();
+
+		if (Application.isEditor)
+		{
+			return;
 		}
 
-		public void OnSpeakClick()
+		switch (Application.platform)
 		{
-			Debug.Log("OnSpeakClick");
-
-			var text = _inputField.text;
-			var language = _languageInputField.text;
-			var rate = float.Parse(_rateInputField.text);
-			var pitch = float.Parse(_pitchInputField.text);
-			Debug.Log(rate);
-			Debug.Log(pitch);
-
-			if (Application.isEditor)
-			{
-				return;
-			}
-
-			switch (Application.platform)
-			{
-				case RuntimePlatform.IPhonePlayer:
-					Speech(text, language, rate, pitch);
-					break;
-				case RuntimePlatform.Android:
-					break;
-			}
-		}
-
-		public void OnStopClick()
-		{
-			Debug.Log("OnStopClick");
-
-			if (Application.isEditor)
-			{
-				return;
-			}
-
-			switch (Application.platform)
-			{
-				case RuntimePlatform.IPhonePlayer:
-					Stop();
-					break;
-				case RuntimePlatform.Android:
-					break;
-			}
+			case RuntimePlatform.IPhonePlayer:
+				if (_tts != null)
+				{
+					_tts.StopSpeech();
+				}
+				break;
+			case RuntimePlatform.Android:
+				break;
 		}
 	}
+
+	private void SpeakTextsIfExists()
+	{
+		if (_texts.Count < 1)
+		{
+			return;
+		}
+
+		var language = _languageInputField.text;
+		var rate = float.Parse(_rateInputField.text);
+		var pitch = float.Parse(_pitchInputField.text);
+
+		var text = _texts.First();
+		_texts.RemoveAt(0);
+		_tts = FreeTtsManager.Create(text, language, rate, pitch);
+		_tts.OnSpeakComplete += OnSpeakComplete;
+	}
+
+	private void OnSpeakComplete(FreeTtsResult result) {
+		Debug.Log("OnFinishSpeaking");
+		//parsing result
+		switch(result) {
+			case FreeTtsResult.Finish:
+				Debug.Log ("Finish!!!");
+				SpeakTextsIfExists();
+				break;
+			case FreeTtsResult.Cancel:
+				Debug.Log ("Finish!!!");
+				break;
+		}
+	}
+
 }
