@@ -22,6 +22,19 @@ public class TtsForm : MonoBehaviour
 		_rateInputField.text = "0.5";
 		_pitchInputField.text = "1.0";
 		_languageInputField.text = "zh-CN";
+
+		if (!Application.isEditor && Application.platform == RuntimePlatform.Android)
+		{
+			var nativeDialog = new AndroidJavaClass ("com.wapa5pow.freettsplugin.TtsManagerPlugin");
+			var unityPlayer = new AndroidJavaClass ("com.unity3d.player.UnityPlayer");
+			var context = unityPlayer.GetStatic<AndroidJavaObject> ("currentActivity");
+			context.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
+				nativeDialog.CallStatic (
+					"initialize",
+					context
+				);
+			}));
+		}
 	}
 
 	public void OnSpeakClick()
@@ -47,16 +60,9 @@ public class TtsForm : MonoBehaviour
 			return;
 		}
 
-		switch (Application.platform)
+		if (_tts != null)
 		{
-			case RuntimePlatform.IPhonePlayer:
-				if (_tts != null)
-				{
-					_tts.StopSpeech();
-				}
-				break;
-			case RuntimePlatform.Android:
-				break;
+			_tts.StopSpeech();
 		}
 	}
 

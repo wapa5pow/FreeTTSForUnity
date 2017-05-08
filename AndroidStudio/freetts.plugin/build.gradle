@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
 
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 15
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -28,4 +28,25 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.3.1'
     testCompile 'junit:junit:4.12'
+}
+
+android.libraryVariants.all { variant ->
+    variant.outputs.each { output ->
+        output.packageLibrary.exclude('libs/classes.jar')
+    }
+}
+
+task exportAar(type: Copy, dependsOn: assemble)  {
+    from './build/outputs/aar'
+    into '../../Assets/Plugins/Android'
+    include '*plugin-release.aar'
+}
+
+// http://monoworks.co.jp/dev/android_develop_memo_20150730/
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs
+        }
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -14,7 +15,7 @@ namespace FreeTts
 		[DllImport("__Internal")]
 		private static extern void Stop ();
 
-		public static FreeTtsManager Create(string text, string langauge, float rate, float pitch)
+		public static FreeTtsManager Create(string text, string language, float rate, float pitch)
 		{
 			var tts = new GameObject("FreeTtsManager").AddComponent<FreeTtsManager>();
 			if (!Application.isEditor)
@@ -22,9 +23,22 @@ namespace FreeTts
 				switch (Application.platform)
 				{
 					case RuntimePlatform.IPhonePlayer:
-						Speech(text, langauge, rate, pitch);
+						Speech(text, language, rate, pitch);
 						break;
 					case RuntimePlatform.Android:
+						var nativeDialog = new AndroidJavaClass ("com.wapa5pow.freettsplugin.TtsManagerPlugin");
+						var unityPlayer = new AndroidJavaClass ("com.unity3d.player.UnityPlayer");
+						var context = unityPlayer.GetStatic<AndroidJavaObject> ("currentActivity");
+
+						context.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
+							nativeDialog.CallStatic (
+								"speech",
+								text,
+								language,
+								rate,
+								pitch
+							);
+						}));
 						break;
 				}
 			} else
@@ -45,6 +59,15 @@ namespace FreeTts
 						Stop();
 						break;
 					case RuntimePlatform.Android:
+						var nativeDialog = new AndroidJavaClass ("com.wapa5pow.freettsplugin.TtsManagerPlugin");
+						var unityPlayer = new AndroidJavaClass ("com.unity3d.player.UnityPlayer");
+						var context = unityPlayer.GetStatic<AndroidJavaObject> ("currentActivity");
+
+						context.Call ("runOnUiThread", new AndroidJavaRunnable (() => {
+							nativeDialog.CallStatic (
+								"stop"
+							);
+						}));
 						break;
 				}
 			} else
