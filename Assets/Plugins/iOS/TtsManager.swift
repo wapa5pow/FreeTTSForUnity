@@ -38,6 +38,14 @@ public class TtsManager: NSObject, AVSpeechSynthesizerDelegate {
         synthesizer.stopSpeaking(at: .immediate)
     }
     
+    public func updateLanguages()
+    {
+        var languages = AVSpeechSynthesisVoice.speechVoices().map { $0.language }
+        languages = Array(Set(languages))
+        languages.sort()
+        UnitySendMessage("TtsForm", "AddLanguageButtons", languages.joined(separator: ","))
+    }
+    
     // MARK: AVSpeechSynthesizerDelegate
     public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
         print("start")

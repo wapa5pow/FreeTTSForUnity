@@ -12,4 +12,8 @@ extern "C" {
     void Stop() {
         [[TtsManager shared] stop];
     }
+    
+    void Languages() {
+        [[TtsManager shared] updateLanguages];
+    }
 }

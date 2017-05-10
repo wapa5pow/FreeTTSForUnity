@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.UI;
 using FreeTts;
@@ -11,10 +12,15 @@ public class TtsForm : MonoBehaviour
 	[SerializeField] private InputField _rateInputField;
 	[SerializeField] private InputField _pitchInputField;
 	[SerializeField] private InputField _languageInputField;
-	[SerializeField] private Button _speakButton;
-	[SerializeField] private Button _stopButton;
+	[SerializeField] private GameObject _content;
+	[SerializeField] private GameObject _languageList;
+	[SerializeField] private Button _chooseLanguageButton;
+
 	private FreeTtsManager _tts;
 	private List<string> _texts = new List<string>();
+
+	[DllImport("__Internal")]
+	private static extern void Languages ();
 
 	void Start ()
 	{
@@ -35,6 +41,37 @@ public class TtsForm : MonoBehaviour
 				);
 			}));
 		}
+
+		_languageList.SetActive(false);
+		_chooseLanguageButton.enabled = false;
+		if (Application.isEditor)
+		{
+			AddLanguageButtons("ja-JP,en-US");
+		} else
+		{
+			Languages();
+		}
+	}
+
+	public void AddLanguageButtons(string languages)
+	{
+		foreach (Transform c in _content.transform)
+		{
+			Destroy(c.gameObject);
+		}
+
+		foreach (var language in languages.Split(','))
+		{
+			var button = Instantiate(Resources.Load<GameObject>("LanguageButton")).GetComponent <Button>();
+			var l = language;
+			var t = _content.transform;
+			button.onClick.AddListener(() => SetLanguage(l));
+			button.transform.SetParent(t);
+			button.transform.localScale = Vector3.one;
+			button.GetComponentInChildren<Text>().text = l;
+		}
+
+		_chooseLanguageButton.enabled = true;
 	}
 
 	public void OnSpeakClick()
@@ -64,6 +101,20 @@ public class TtsForm : MonoBehaviour
 		{
 			_tts.StopSpeech();
 		}
+	}
+
+	public void OnChooseLanguageClick()
+	{
+		Debug.Log("OnChooseLanguageClick");
+
+		_languageList.SetActive(true);
+	}
+
+	public void SetLanguage(string language)
+	{
+		Debug.Log("SetLanguage: " + language);
+		_languageInputField.text = language;
+		_languageList.SetActive(false);
 	}
 
 	private void SpeakTextsIfExists()
@@ -97,4 +148,8 @@ public class TtsForm : MonoBehaviour
 		}
 	}
 
+	public void CloseLanguageList()
+	{
+		_languageList.SetActive(false);
+	}
 }

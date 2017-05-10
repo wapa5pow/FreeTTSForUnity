@@ -31,6 +31,7 @@ public class XCodeSetting
 		proj.SetBuildProperty (target, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
 		proj.SetBuildProperty (target, "LD_RUNPATH_SEARCH_PATHS", "@executable_path/Frameworks");
 		proj.SetBuildProperty (target, "SWIFT_OBJC_BRIDGING_HEADER", "$(SRCROOT)/Libraries/Plugins/iOS/UnitySwift-Bridging-Header.h");
+		proj.SetBuildProperty (target, "SWIFT_VERSION", "3.0");
 
 		// 設定を保存
 		File.WriteAllText (projectPath, proj.WriteToString ());
